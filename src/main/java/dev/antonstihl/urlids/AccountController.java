@@ -27,9 +27,9 @@ public class AccountController {
                 .toList();
     }
 
-    @GetMapping("/accounts/{id}")
-    public PublicAccount getAccount(@PathVariable UUID id) {
-        UUID accountId = IdMasker.decrypt(id, PRINCIPAL_CUSTOMER_ID);
+    @GetMapping("/accounts/{publicId}")
+    public PublicAccount getAccount(@PathVariable UUID publicId) {
+        UUID accountId = IdMasker.decrypt(publicId, PRINCIPAL_CUSTOMER_ID);
         return accountRepository.getAccount(accountId)
                 .map(a -> AccountConverter.convert(a, PRINCIPAL_CUSTOMER_ID))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
