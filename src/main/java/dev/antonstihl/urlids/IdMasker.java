@@ -4,6 +4,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
+import java.util.Base64;
 import java.util.UUID;
 
 public final class IdMasker {
@@ -39,29 +40,30 @@ public final class IdMasker {
     }
 
     /**
-     * Deterministically encrypt a UUID into another UUID with a provided key string
+     * Deterministically encrypt a UUID into a Base64 string with a provided key string
      */
-    public static UUID encrypt(UUID input, UUID principalCustomerId) {
+    public static String encryptToString(UUID input, UUID principalCustomerId) {
         try {
             byte[] keyBytes = deriveKey(principalCustomerId.toString());
             Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
             cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(keyBytes, "AES"));
             byte[] encrypted = cipher.doFinal(uuidToBytes(input));
-            return bytesToUuid(encrypted);
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(encrypted);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     /**
-     * Deterministically decrypt back to original UUID with a provided key string
+     * Deterministically decrypt a Base64 string back to original UUID with a provided key string
      */
-    public static UUID decrypt(UUID masked, UUID principalCustomerId) {
+    public static UUID decryptFromString(String masked, UUID principalCustomerId) {
         try {
             byte[] keyBytes = deriveKey(principalCustomerId.toString());
             Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(keyBytes, "AES"));
-            byte[] decrypted = cipher.doFinal(uuidToBytes(masked));
+            byte[] encrypted = Base64.getUrlDecoder().decode(masked);
+            byte[] decrypted = cipher.doFinal(encrypted);
             return bytesToUuid(decrypted);
         } catch (Exception e) {
             throw new RuntimeException(e);
