@@ -39,15 +39,35 @@ public final class IdMasker {
     }
 
     /**
+     * Remove dashes from a UUID and make it a continuous string
+     */
+    private static String uuidToString(UUID uuid) {
+        return uuid.toString().replace("-", "");
+    }
+
+    /**
+     * Add dashes back to a continuous UUID string
+     */
+    private static UUID stringToUuid(String str) {
+        if (str.length() != 32) throw new IllegalArgumentException("UUID string must be 32 characters");
+        String dashed = str.substring(0, 8) + "-" +
+                        str.substring(8, 12) + "-" +
+                        str.substring(12, 16) + "-" +
+                        str.substring(16, 20) + "-" +
+                        str.substring(20);
+        return UUID.fromString(dashed);
+    }
+
+    /**
      * Deterministically encrypt a UUID into another UUID with a provided key string
      */
-    public static UUID encrypt(UUID input, UUID principalCustomerId) {
+    public static String encrypt(UUID input, UUID principalCustomerId) {
         try {
             byte[] keyBytes = deriveKey(principalCustomerId.toString());
             Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
             cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(keyBytes, "AES"));
             byte[] encrypted = cipher.doFinal(uuidToBytes(input));
-            return bytesToUuid(encrypted);
+            return uuidToString(bytesToUuid(encrypted));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -56,12 +76,12 @@ public final class IdMasker {
     /**
      * Deterministically decrypt back to original UUID with a provided key string
      */
-    public static UUID decrypt(UUID masked, UUID principalCustomerId) {
+    public static UUID decrypt(String masked, UUID principalCustomerId) {
         try {
             byte[] keyBytes = deriveKey(principalCustomerId.toString());
             Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(keyBytes, "AES"));
-            byte[] decrypted = cipher.doFinal(uuidToBytes(masked));
+            byte[] decrypted = cipher.doFinal(uuidToBytes(stringToUuid(masked)));
             return bytesToUuid(decrypted);
         } catch (Exception e) {
             throw new RuntimeException(e);

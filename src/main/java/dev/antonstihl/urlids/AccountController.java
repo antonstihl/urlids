@@ -28,7 +28,7 @@ public class AccountController {
     }
 
     @GetMapping("/accounts/{publicId}")
-    public PublicAccount getAccount(@PathVariable UUID publicId) {
+    public PublicAccount getAccount(@PathVariable String publicId) {
         UUID accountId = IdMasker.decrypt(publicId, PRINCIPAL_CUSTOMER_ID);
         return accountRepository.getAccount(accountId)
                 .map(a -> AccountConverter.convert(a, PRINCIPAL_CUSTOMER_ID))
