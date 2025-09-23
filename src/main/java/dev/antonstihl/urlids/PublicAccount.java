@@ -1,7 +1,9 @@
 package dev.antonstihl.urlids;
 
+import java.util.UUID;
+
 public record PublicAccount(
-        String publicId,
+        UUID publicId,
         String accountType
 ) {
 }
